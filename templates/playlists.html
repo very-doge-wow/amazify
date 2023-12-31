@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Amazify - Amazon Playlists{% endblock %}
+{% block header %}Amazify - Amazon Playlists{% endblock %}
+{% block content %}
+{% for playlist in content %}
+    <div class="media fadeitin">
+        <div class="mr-4">
+            <a href="{{playlist['url']}}" target="_blank"><img class="media-object" width="150" src="{{playlist['image']['url']}}" /></a>
+        </div>
+        <div class="media-body">
+          <h4><a class="text-dark nounderline" href="{{playlist['url']}}" target="_blank">{{playlist['title']}}</a></h4>
+          <form action="{{ url_for('migrate_playlist') }}" method="post">
+              <div class="button">
+                  <input type="text" name="submitValue" value="{{playlist['id']}}" style="display: none">
+                  <input type="submit" value="Migrate Playlist">
+              </div>
+          </form>
+          <dl class="dl-horizontal">
+            <dt>Id</dt><dd>{{playlist['id']}}</dd>
+            <dt>TrackCount</dt><dd>{{playlist['trackCount']}}</dd>
+            <dt>Visibility</dt><dd>{{playlist['visibility']}}</dd>
+            <dt>Duration</dt><dd>{{playlist['duration']}}</dd>
+            <dt>Amazon Url</dt><dd><a href="{{playlist['url']}}" target="_blank">{{playlist['url']}}</a></dd>
+          </dl>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}

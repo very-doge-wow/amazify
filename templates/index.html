@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Amazify{% endblock %}
+{% block header %}Amazify{% endblock %}
+{% block content %}
+
+<p>Login at Spotify.</p>
+<a href="{{ url_for('auth_spotify') }}" class="btn btn-primary">Spotify Login</a>
+<br><br>
+
+<p>Optionally test the Spotify credentials by performing a track search.</p>
+<a href="{{ url_for('search_spotify') }}" class="btn btn-primary">Search tracks on Spotify</a>
+<br><br>
+
+<p>List your Amazon Music playlists and migrate them in the subsequent view.</p>
+<a href="{{ url_for('playlists_amazon') }}" class="btn btn-primary">Amazon Music Playlists</a>
+<br><br>
+
+{% endblock %}
