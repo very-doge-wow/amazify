@@ -8,7 +8,7 @@ var intervalId = setInterval(function() {
     .then(response => response.json())
     .then(data => document.getElementById('migration').value = data.progress)
     .catch(error => console.error('Error:', error));
-}, 5000);
+}, 500);
 </script>
 
 <div class="media fadeitin">

@@ -1,37 +1,19 @@
 import base64
+import threading
 import time
 
 from flask import abort, Flask, redirect, render_template, request, session, url_for, make_response
-from util import get_paginated_track_list, generate_random_string, query_artist_spotify, create_spotify_playlist
 import json
 import logging
-import os
 import requests
+
+import settings
+from util import get_paginated_track_list, generate_random_string, query_artist_spotify, create_spotify_playlist, add_tracks_to_spotify_playlist
+from settings import *
 
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG
 )
-
-# Client info for Spotify
-SPOTIFY_CLIENT_ID = os.environ['SPOTIFY_CLIENT_ID']
-SPOTIFY_CLIENT_SECRET = os.environ['SPOTIFY_CLIENT_SECRET']
-
-# Client info for Amazon Music
-AMAZON_TOKEN = os.environ['AMAZON_TOKEN']
-AMAZON_X_API_KEY = os.environ['AMAZON_X_API_KEY']
-
-# Spotify API endpoints and configs
-SPOTIFY_BASE_ENDPOINT = 'https://api.spotify.com/v1'
-SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token'
-SPOTIFY_SEARCH_ENDPOINT = f'{SPOTIFY_BASE_ENDPOINT}/search'
-SPOTIFY_ME_ENDPOINT = f'{SPOTIFY_BASE_ENDPOINT}/me'
-SPOTIFY_REDIRECT_URL = 'http://127.0.0.1:5000/callback'
-SPOTIFY_STATE_KEY = 'spotify_auth_state'
-
-# Amazon API endpoints
-AMAZON_BASE_ENDPOINT = 'https://api.music.amazon.dev/v1'
-AMAZON_TOKEN_URL = 'https://api.amazon.com/auth/o2/token'
-AMAZON_ME_ENDPOINT = f'{AMAZON_BASE_ENDPOINT}/me/'
 
 # Startup
 app = Flask(__name__)
@@ -41,9 +23,10 @@ app.secret_key = os.environ['SECRET_KEY']
 @app.route('/auth/spotify')
 def auth_spotify():
     state = generate_random_string(16)
+    scope = '%20'.join(SPOTIFY_API_SCOPES)
     response = make_response(redirect(
-        'https://accounts.spotify.com/authorize?' +
-        f'response_type=code&client_id={SPOTIFY_CLIENT_ID}&scope=user-read-private%20user-read-email&redirect_uri={SPOTIFY_REDIRECT_URL}&state={state}'
+        f'{SPOTIFY_AUTH_URL}?' +
+        f'response_type=code&client_id={SPOTIFY_CLIENT_ID}&scope={scope}&redirect_uri={SPOTIFY_REDIRECT_URL}&state={state}'
     ))
     response.set_cookie(SPOTIFY_STATE_KEY, state)
     return response
@@ -62,7 +45,7 @@ def callback():
     response.delete_cookie(SPOTIFY_STATE_KEY)
 
     auth_options = {
-        'url': 'https://accounts.spotify.com/api/token',
+        'url': SPOTIFY_TOKEN_URL,
         'data': {
             'code': code,
             'redirect_uri': SPOTIFY_REDIRECT_URL,
@@ -94,7 +77,7 @@ def search_spotify():
     if request.method == 'POST':
         artist = request.form.get('artist')
         if artist:
-            res = query_artist_spotify(spotify_search_endpoint=SPOTIFY_SEARCH_ENDPOINT, artist=artist)
+            res = query_artist_spotify(artist=artist)
             res_data = res.json()
 
             if res_data.get('error') or res.status_code != 200:
@@ -117,7 +100,6 @@ def search_spotify():
 @app.route('/amazon/playlists', methods=['GET'])
 def playlists_amazon():
     """Simple example search for playlists."""
-
     # first get user_id
     if not session.get('amazon_user'):
         headers = {
@@ -158,18 +140,31 @@ def playlists_amazon():
 
 @app.route('/amazon/migrate', methods=['POST'])
 def migrate_playlist():
-    playlist_id = request.form.get('submitValue')
-    session['progress'] = 0
+    original_playlist_id = request.form.get('submitValue')
+    settings.PROGRESS = 0
+
     # get the playlist from amazon API (including tracks)
-    original_playlist = get_paginated_track_list(amazon_base_endpoint=AMAZON_BASE_ENDPOINT, amazon_token=AMAZON_TOKEN, amazon_x_api_key=AMAZON_X_API_KEY, playlist={}, playlist_id=playlist_id, cursor=None)
+    original_playlist = get_paginated_track_list(playlist={}, playlist_id=original_playlist_id, cursor=None)
+
+    # we only need artist and name of the tracks
+    tracks = []
+    for edge in original_playlist['tracks']['edges']:
+        track = {
+            'artist': edge['node']['artists'][0]['name'],
+            'title': edge['node']['title'],
+        }
+        tracks.append(track)
+
     # create new playlist at spotify if not exists
-    create_spotify_playlist(spotify_me_endpoint=SPOTIFY_ME_ENDPOINT, name=original_playlist['title'])
+    new_playlist_id = create_spotify_playlist(name=original_playlist['title'])
+
+    # ToDo: Make this call asynch to template returns!
+    thread = threading.Thread(target=add_tracks_to_spotify_playlist, name="migration", args=[session['spotify_access_token'], new_playlist_id, tracks])
+    thread.start()
+
     return render_template(template_name_or_list='migrate.html', content=original_playlist)
 
 
 @app.route('/api/progress', methods=['GET'])
 def api_progress():
-    progress = session.get('progress')
-    if not progress:
-        progress = 0
-    return {'progress': progress}
+    return {'progress': settings.PROGRESS}
