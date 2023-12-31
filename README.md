@@ -10,7 +10,7 @@ First you need to navigate to [developer.spotify.com](https://developer.spotify.
 create a new app. Use the following as callback URL:
 
 ```
-http://127.0.0.1:5000/auth/spotify
+http://127.0.0.1:5000/callback
 ```
 
 ### Amazon Authentication

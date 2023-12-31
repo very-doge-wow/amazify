@@ -3,12 +3,12 @@
 {% block header %}Amazify{% endblock %}
 {% block content %}
 
-<p>Login at Spotify.</p>
+<p>Login at Spotify/Refresh Credentials</p>
 <a href="{{ url_for('auth_spotify') }}" class="btn btn-primary">Spotify Login</a>
 <br><br>
 
-<p>Optionally test the Spotify credentials by performing a track search.</p>
-<a href="{{ url_for('search_spotify') }}" class="btn btn-primary">Search tracks on Spotify</a>
+<p>Optionally test the Spotify credentials by performing an artist search.</p>
+<a href="{{ url_for('search_spotify') }}" class="btn btn-primary">Search artists on Spotify</a>
 <br><br>
 
 <p>List your Amazon Music playlists and migrate them in the subsequent view.</p>
