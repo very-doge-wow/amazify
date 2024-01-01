@@ -1,4 +1,5 @@
 import base64
+import re
 import threading
 import time
 
@@ -141,6 +142,9 @@ def playlists_amazon():
 def migrate_playlist():
     original_playlist_id = request.form.get('submitValue')
     settings.PROGRESS = 0
+    settings.FAILED_TRACKS = ""
+    settings.TRACK_TRANSLATION = []
+    settings.DESTINATION_PLAYLIST_URL = ""
 
     # get the playlist from amazon API (including tracks)
     original_playlist = get_paginated_track_list(playlist={}, playlist_id=original_playlist_id, cursor=None)
@@ -148,16 +152,22 @@ def migrate_playlist():
     # we only need artist and name of the tracks
     tracks = []
     for edge in original_playlist['tracks']['edges']:
+        # sanitize for better search results
+        title = re.sub(r'\[.*\]', '', edge['node']['title'])
+        title = re.sub(r'\(.*\)', '', title)
+        title = re.sub(r'-?\s?Demo\s(Version)?', '', title)
         track = {
             'artist': edge['node']['artists'][0]['name'],
-            'title': edge['node']['title'],
+            'title': title,
         }
         tracks.append(track)
 
     # create new playlist at spotify if not exists
     new_playlist_id = create_spotify_playlist(name=original_playlist['title'])
 
-    thread = threading.Thread(target=add_tracks_to_spotify_playlist, name="migration", args=[session['spotify_access_token'], new_playlist_id, tracks])
+    settings.TRACK_TRANSLATION = tracks
+
+    thread = threading.Thread(target=add_tracks_to_spotify_playlist, name="migration", args=[session['spotify_access_token'], new_playlist_id])
     thread.start()
 
     return render_template(template_name_or_list='migrate.html', content=original_playlist)
@@ -166,3 +176,35 @@ def migrate_playlist():
 @app.route('/api/progress', methods=['GET'])
 def api_progress():
     return {'progress': settings.PROGRESS}
+
+
+@app.route('/api/failed', methods=['GET'])
+def api_failed():
+    return {'failed': settings.FAILED_TRACKS}
+
+
+@app.route('/api/tracks', methods=['GET'])
+def api_tracks():
+    tracks = []
+    for track in settings.TRACK_TRANSLATION:
+        result = {
+            'source': {
+                'title': track['title'],
+                'artist': track['artist']
+            }
+        }
+        if track.get('translation'):
+            result['destination'] = {
+                'title': track['translation']['title'],
+                'artist': track['translation']['artist']
+            }
+        tracks.append(result)
+
+    html = "<table class=\"w3-table-all w3-hoverable\"><thead><tr><th>Amazon Music</th><th>Spotify</th></tr></thead><tbody>"
+    for track in tracks:
+        destination = ""
+        if track.get('destination'):
+            destination = f"{track['destination']['artist']} - {track['destination']['title']}"
+        html += f"<tr><td>{track['source']['artist']} - {track['source']['title']}</td><td>{destination}</td></tr>"
+    html += "</tbody></table>"
+    return {'translation': html}

@@ -88,31 +88,50 @@ def create_spotify_playlist(name: str):
         logging.error("could not create new playlist in spotify")
         logging.error(response.text)
 
-    playlist_id = json.loads(response.text)['id']
+    payload = json.loads(response.text)
+    playlist_id = payload['id']
+    settings.DESTINATION_PLAYLIST_URL = payload['external_urls']['spotify']
+    session['destination'] = settings.DESTINATION_PLAYLIST_URL
     return playlist_id
 
 
-def add_tracks_to_spotify_playlist(spotify_access_token: str, playlist_id: str, tracks: list[dict]):
+def add_tracks_to_spotify_playlist(spotify_access_token: str, playlist_id: str):
     count = 0
-    for track in tracks:
-        # first get track id
+    logging.debug(f"length of tracks: {len(settings.TRACK_TRANSLATION)}")
+    for track in settings.TRACK_TRANSLATION:
+        # update progress
+        count += 1
+        settings.PROGRESS = (count / len(settings.TRACK_TRANSLATION)) * 100
+        logging.debug(f"track count: {count}")
+        logging.debug(f"progress: {settings.PROGRESS}")
+
+        # get track id
         logging.debug(f"Searching for track: {track['artist']} - {track['title']}")
         url = f'{SPOTIFY_BASE_ENDPOINT}/search'
         params = {
-            'q': f'remaster%20track:{track["title"]}%20artist:{track["artist"]}',
+            'q': f'{track["title"]} - {track["artist"]}',
             'type': 'track',
-            'limit': 2,
+            'limit': 1,
         }
+
         headers = {
             'Authorization': f'Bearer {spotify_access_token}'
         }
         response = requests.get(url, params=params, headers=headers)
         results = json.loads(response.text)['tracks']['items']
-        # sort results by popularity and use most popular
-        result = sorted(results, key=lambda d: d['popularity'])[0]
-        spotify_track_id = result['id']
-        # might return inaccurate results if track is not actually present in spotify
-        logging.debug(f'Found track on spotify: {result["artists"][0]["name"]} - {result["name"]}')
+
+        if len(results) == 0:
+            logging.error(f"Could not find the track on spotify, skipping...")
+            settings.FAILED_TRACKS += f"<li>{track['artist']} - {track['title']}</li>"
+            continue
+
+        spotify_track_id = results[0]['id']
+        logging.debug(f'Found track on spotify: {results[0]["artists"][0]["name"]} - {results[0]["name"]}')
+
+        track['translation'] = {
+            'artist': results[0]["artists"][0]["name"],
+            'title': results[0]["name"],
+        }
 
         # add track to playlist
         url = f'{SPOTIFY_BASE_ENDPOINT}/playlists/{playlist_id}/tracks'
@@ -131,10 +150,3 @@ def add_tracks_to_spotify_playlist(spotify_access_token: str, playlist_id: str, 
         if response.status_code != 201:
             logging.error("couldn't add track {track['artist'] - track['title']} to playlist")
             logging.error(response.text)
-
-        # update progress
-        count += 1
-        settings.PROGRESS = (count / len(tracks)) * 100
-        logging.debug(f"length of tracks: {len(tracks)}")
-        logging.debug(f"track count: {count}")
-        logging.debug(f"progress: {settings.PROGRESS}")

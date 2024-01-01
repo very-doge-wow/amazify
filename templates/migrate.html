@@ -3,35 +3,63 @@
 {% block header %}Amazify - Migrate Amazon Playlist to Spotify{% endblock %}
 {% block content %}
 <script>
-var intervalId = setInterval(function() {
+var intervalProgress = setInterval(function() {
   fetch('/api/progress')
     .then(response => response.json())
     .then(data => document.getElementById('migration').value = data.progress)
     .catch(error => console.error('Error:', error));
 }, 500);
+
+var intervalFailed = setInterval(function() {
+  fetch('/api/failed')
+    .then(response => response.json())
+    .then(data => document.getElementById('failed-tracks').innerHTML = data.failed)
+    .catch(error => console.error('Error:', error));
+}, 500);
+
+var intervalTranslation = setInterval(function() {
+  fetch('/api/tracks')
+    .then(response => response.json())
+    .then(data => document.getElementById('track-translation-table').innerHTML = data.translation)
+    .catch(error => console.error('Error:', error));
+}, 500);
 </script>
+
+<!--<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">-->
+<style>
+.w3-table,.w3-table-all{border-collapse:collapse;border-spacing:0;width:100%;display:table}.w3-table-all{border:1px solid #ccc}
+.w3-bordered tr,.w3-table-all tr{border-bottom:1px solid #ddd}.w3-striped tbody tr:nth-child(even){background-color:#f1f1f1}
+.w3-table-all tr:nth-child(odd){background-color:#fff}.w3-table-all tr:nth-child(even){background-color:#f1f1f1}
+.w3-hoverable tbody tr:hover,.w3-ul.w3-hoverable li:hover{background-color:#ccc}.w3-centered tr th,.w3-centered tr td{text-align:center}
+.w3-table td,.w3-table th,.w3-table-all td,.w3-table-all th{padding:8px 8px;display:table-cell;text-align:left;vertical-align:top}
+.w3-table th:first-child,.w3-table td:first-child,.w3-table-all th:first-child,.w3-table-all td:first-child{padding-left:16px}
+.w3-hoverable tbody tr:hover,.w3-ul.w3-hoverable li:hover{background-color:#ccc}.w3-centered tr th,.w3-centered tr td{text-align:center}
+</style>
 
 <div class="media fadeitin">
     <div class="mr-4">
         <a href="{{content['url']}}" target="_blank"><img class="media-object" width="150" src="{{content['images'][0]['url']}}" /></a>
     </div>
     <div class="media-body">
-      <h4><a class="text-dark nounderline" href="{{content['url']}}" target="_blank">{{content['title']}}</a></h4>
-      <label for="migration">Migration progress:</label>
-      <progress id="migration" style="width: 100%" value="{{ session['progress'] }}" max="100"></progress>
-      <dl class="dl-horizontal">
-        <dt>Id</dt><dd>{{content['id']}}</dd>
-        <dt>TrackCount</dt><dd>{{content['trackCount']}}</dd>
-        <dt>Visibility</dt><dd>{{content['visibility']}}</dd>
-        <dt>Duration</dt><dd>{{content['duration']}}</dd>
-        <dt>Amazon Url</dt><dd><a href="{{content['url']}}" target="_blank">{{content['url']}}</a></dd>
-      </dl>
-        <h5>Tracks</h5>
-        <ul>
-            {% for track in content['tracks']['edges'] %}
-            <li>{{ track['node']['artists'][0]['name'] }} - {{ track['node']['title'] }}</li>
-            {% endfor %}
+        <h4><a class="text-dark nounderline" href="{{content['url']}}" target="_blank">{{content['title']}}</a></h4>
+        <label for="migration">Migration progress:</label>
+        <progress id="migration" style="width: 100%" value="{{ session['progress'] }}" max="100"></progress>
+        <h6>Failed Tracks (if any)</h6>
+        <ul id="failed-tracks" style="color: red">
+            <!--Will be filled using JS-->
         </ul>
+        <dl class="dl-horizontal">
+            <dt>Id</dt><dd>{{content['id']}}</dd>
+            <dt>TrackCount</dt><dd>{{content['trackCount']}}</dd>
+            <dt>Visibility</dt><dd>{{content['visibility']}}</dd>
+            <dt>Duration</dt><dd>{{content['duration']}}</dd>
+            <dt>Amazon Url</dt><dd><a href="{{content['url']}}" target="_blank">{{content['url']}}</a></dd>
+            <dt>Spotify Url</dt><dd><a href="{{ session['destination'] }}" target="_blank">{{ session['destination'] }}</a></dd>
+        </dl>
+        <h6>Track Translation</h6>
+        <div id="track-translation-table">
+            <!--Will be filled using JS-->
+        </div>
     </div>
 </div>
 {% endblock %}
