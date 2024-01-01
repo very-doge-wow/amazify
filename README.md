@@ -2,7 +2,7 @@
 
 ![logo](https://github.com/very-doge-wow/amazify/blob/main/logo.png?raw=true)
 
-[![Lint Markdown](https://github.com/very-doge-wow/amazify/actions/workflows/lintmarkdown.yml/badge.svg)](https://github.com/very-doge-wow/amazify/actions/workflows/lintmarkdown.yml)
+[![Markdownlint](https://github.com/very-doge-wow/amazify/actions/workflows/lintmarkdown.yml/badge.svg?branch=main)](https://github.com/very-doge-wow/amazify/actions/workflows/lintmarkdown.yml)
 
 Migrate your playlists from Amazon Music to Spotify using a simple Flask web interface.
 
