@@ -132,9 +132,9 @@ def add_tracks_to_spotify_playlist(spotify_access_token: str, playlist_id: str, 
             logging.error("couldn't add track {track['artist'] - track['title']} to playlist")
             logging.error(response.text)
 
-        # write progress to session
+        # update progress
         count += 1
         settings.PROGRESS = (count / len(tracks)) * 100
-        print(f"length of tracks: {len(tracks)}")
-        print(f"track count: {count}")
-        print(f"progress: {settings.PROGRESS}")
+        logging.debug(f"length of tracks: {len(tracks)}")
+        logging.debug(f"track count: {count}")
+        logging.debug(f"progress: {settings.PROGRESS}")
