@@ -30,3 +30,9 @@ AMAZON_ME_ENDPOINT = f'{AMAZON_BASE_ENDPOINT}/me'
 
 # storage for progress
 PROGRESS = 0
+# storage for failed migration of songs
+FAILED_TRACKS = ""
+# stores source tracks and their destination tracks
+TRACK_TRANSLATION = []
+# stores target playlist url after creation
+DESTINATION_PLAYLIST_URL = ""
