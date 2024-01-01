@@ -99,7 +99,6 @@ def search_spotify():
 
 @app.route('/amazon/playlists', methods=['GET'])
 def playlists_amazon():
-    """Simple example search for playlists."""
     # first get user_id
     if not session.get('amazon_user'):
         headers = {
@@ -158,7 +157,6 @@ def migrate_playlist():
     # create new playlist at spotify if not exists
     new_playlist_id = create_spotify_playlist(name=original_playlist['title'])
 
-    # ToDo: Make this call asynch to template returns!
     thread = threading.Thread(target=add_tracks_to_spotify_playlist, name="migration", args=[session['spotify_access_token'], new_playlist_id, tracks])
     thread.start()
 
