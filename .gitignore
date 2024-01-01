@@ -133,3 +133,5 @@ dmypy.json
 __pycache__
 .idea
 lol.json
+.DS_Store
+.DS_Store
