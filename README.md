@@ -66,7 +66,7 @@ Start the flask server like this:
 pipenv run python -m flask run
 ```
 
-You can then open the webinterface under the URL `https://127.0.0.1:5000`.
+You can then open the webinterface under the URL `http://127.0.0.1:5000`.
 Press the button for authenticating at Spotify before running any migration.
 Errors will be printed in the Flask app's log, if any occurred.
 
