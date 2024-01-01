@@ -17,7 +17,7 @@ logging.basicConfig(
 
 # Startup
 app = Flask(__name__)
-app.secret_key = generate_random_string(32)
+app.secret_key = "fakekey"
 
 
 @app.route('/auth/spotify')

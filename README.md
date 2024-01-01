@@ -6,7 +6,7 @@ Migrate your playlists from Amazon Music to Spotify using a simple Flask web int
 
 ## Setup and Startup
 
-### Spotify Authentication via OAuth
+### 🔑 Spotify Authentication via OAuth
 
 Navigate to [developer.spotify.com](https://developer.spotify.com/dashboard) and
 create a new app. Use this as the callback URL:
@@ -15,7 +15,9 @@ create a new app. Use this as the callback URL:
 http://127.0.0.1:5000/callback
 ```
 
-### Amazon Authentication (Workaround)
+Retrieve your client id and client secret for later use.
+
+### 🔑 Amazon Authentication (Workaround)
 
 Currently, the Amazon Music API won't let us create applications for OAuth ourselves without
 them needing to be approved by Amazon. Since we only want to perform a one-time
@@ -30,7 +32,7 @@ Copy the resulting token and set it as environment variable as described in the 
 Make sure to also copy the `x-api-key` value as provided in the example `curl`
 command given on Amazon's website as well.
 
-### Required Environment Variables
+### ℹ️ Required Environment Variables
 
 Next set these environment variables. Get the client id and client
 secret from the spotify app you have just created.
@@ -45,7 +47,7 @@ export AMAZON_TOKEN=XXX
 export AMAZON_X_API_KEY=XXX
 ```
 
-### Installation of Dependencies
+### 🔧 Installation of Dependencies
 
 Install the dependencies using pipenv:
 
@@ -53,7 +55,7 @@ Install the dependencies using pipenv:
 pipenv install
 ```
 
-### Startup
+### 🚀 Startup
 
 Start the flask server like this:
 
@@ -65,7 +67,11 @@ You can then open the webinterface under the URL `https://127.0.0.1:5000`.
 Press the button for authenticating at Spotify before running any migration.
 Errors will be printed in the Flask app's log, if any occurred.
 
-## Caveats
+|    | Tip                                                                                                                                                                             |
+|----|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 💡 | Try to verify the status code of the reponses from the Amazon/Spotify API using the log before opening an issue. Refreshing the credentials will most likely resolve the issue. |
+
+## 🚧 Caveats
 
 The following limitations exist:
 
@@ -73,4 +79,3 @@ The following limitations exist:
 2. The Amazon token will expire after about `30min`. Keep that in mind when running migrations.
 3. The app does **not** check if a playlist with the same name already exists. A new playlist is created each time you start a migration.
 4. If a song from the Amazon Playlist is not present in Spotify, the Spotify Search API might return false songs, which will then be added to the playlist. Make sure to check the result after the migration has finished.
-

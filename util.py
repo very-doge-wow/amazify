@@ -95,7 +95,6 @@ def create_spotify_playlist(name: str):
 def add_tracks_to_spotify_playlist(spotify_access_token: str, playlist_id: str, tracks: list[dict]):
     count = 0
     for track in tracks:
-        count += 1
         # first get track id
         logging.debug(f"Searching for track: {track['artist']} - {track['title']}")
         url = f'{SPOTIFY_BASE_ENDPOINT}/search'
@@ -135,4 +134,7 @@ def add_tracks_to_spotify_playlist(spotify_access_token: str, playlist_id: str, 
 
         # write progress to session
         count += 1
-        settings.PROGRESS = count / len(tracks) * 100
+        settings.PROGRESS = (count / len(tracks)) * 100
+        print(f"length of tracks: {len(tracks)}")
+        print(f"track count: {count}")
+        print(f"progress: {settings.PROGRESS}")
